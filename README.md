@@ -138,6 +138,21 @@ Depois fazendo isso va em advanced > advanced SFX options > setup
 E em "Run after extraction" coloque o nome do arquiv ```pdf``` e em baixo o nome do ```malware```
 ![Screenshot from 2020-09-17 00-39-07](https://user-images.githubusercontent.com/62577914/93421243-cf8e5200-f87e-11ea-9676-c2c7e2b49988.png)
 
+Depois va para ```modes``` e marque a opção ```[] Unpack to temporary folder``` e ```hide all```
+assim como mostrado na imagen ![Screenshot from 2020-09-24 21-07-34](https://user-images.githubusercontent.com/62577914/94215613-375e2180-feab-11ea-9777-f918d8ecf93e.png)
 
-# **EU FIQUEI CANSADO E FUI DORMI E NAO TERMINEI**
-## **AMANHA EU TERMINO, ATE**
+
+Depois va em ```Text and icon``` e logo a baixo na opção ```Load SFX icon from the file``` 
+clique em ```browser``` e selecione o ```.ico```que baixamos anteriormente
+
+Depois va em ```update``` e marque a opção ```Extract and update files```
+e tambem ```Overwrite all files``` 
+Agora voce pode comfirmar tudo clicando em ```ok```
+
+Apos fazer a confirmação o arquivo ira ser criado
+
+visualmente se parece identico ao um arquivo pdf 
+![Screenshot from 2020-09-24 21-24-47](https://user-images.githubusercontent.com/62577914/94216459-65446580-fead-11ea-890a-62a49219738d.png)
+
+# E pronto seu arquivo PDF malicioso foi criado
+# Caso queira esconder em uma imgem basta fazer o mesmo processo apenas subistituindo a extensão e nome
