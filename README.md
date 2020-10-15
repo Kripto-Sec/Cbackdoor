@@ -7,7 +7,7 @@ sudo apt install gcc
 ```
 Ira precisar do mingw
 ```
-sudo apt install mingw
+sudo apt install mingw-w64
 ```
 E também ira precisar de qualquer editor de texto
 ## Como deixar funcional
