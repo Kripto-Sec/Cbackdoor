@@ -10,7 +10,7 @@ Ira precisar do mingw
 sudo apt install mingw-w64
 ```
 E também ira precisar de qualquer editor de texto
-## Como deixar funcional
+## Como Configurar corretamente
 Primeiro abra o arquivo ```Backdoor.c``` e modifique as linhas 145 e 146 mudando o endereço IP e porta
 
 Depois faça o mesmo no ```server.c``` porem nas linhas 28 e 29 depois basta compilar
